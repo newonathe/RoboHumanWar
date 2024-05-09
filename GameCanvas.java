@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 public class GameCanvas extends JComponent {
-    ArrowAngle axis;
+    AngleDirection axis;
     BoneProjectile bone;
     CanProjectile can;
     Fence fence;

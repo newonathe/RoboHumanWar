@@ -1,11 +1,11 @@
 import javax.swing.ImageIcon;
 
-public class ArrowAngle extends GameObject {
+public class AngleDirection extends GameObject {
     int angle;
     boolean willGoDown;
     boolean willGoUp;
 
-    public ArrowAngle(int x, int y, ImageIcon image) {
+    public AngleDirection(int x, int y, ImageIcon image) {
         super(x, y, image);
     }
 
