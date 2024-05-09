@@ -82,6 +82,10 @@ public class Player extends GameObject{
         }
     }
 
+    // if x>960 = dog; else, cat
+    public boolean playerPosition() {
+        return (super.x>960);
+    }
 
     }
 
