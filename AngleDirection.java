@@ -12,11 +12,9 @@ public class AngleDirection extends GameObject {
     public void generateAngle(Player player) {
         if (player.playerPosition()){
             angle = (int) (Math.random() * 180 + 90); //90-270
-            setAngle(angle);
             goUp();
         } else {
             angle = (int) (Math.random() * 180 - 90); //90 - -90
-            setAngle(angle);
             goUp();
         }
         isUpOrDown(player);
@@ -48,10 +46,6 @@ public class AngleDirection extends GameObject {
         } else if (willGoDown) {
             rotateAngleDown(player);
         }
-    }
-
-    private void setAngle(int angle){
-        this.angle = angle;
     }
 
     private void goUp(){

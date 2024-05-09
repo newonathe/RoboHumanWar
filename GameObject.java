@@ -13,8 +13,8 @@ public abstract class GameObject extends JPanel {
         this.image = image;
 
         // Initialize width and height (you may adjust this based on your needs)
-        this.width = image.getIconWidth(); 
-        this.height = image.getIconHeight();
+        width = image.getIconWidth(); 
+        height = image.getIconHeight();
     }
 
     // Accessor methods (Getters)
@@ -34,9 +34,9 @@ public abstract class GameObject extends JPanel {
 
     // Basic rectangular collision detection (could be refined later)
     public boolean checkCollision(GameObject other) {
-        return (this.x < other.getX() + other.getWidth() &&
-                this.x + this.width > other.getX() &&
-                this.y < other.getY() + other.getHeight() &&
-                this.y + this.height > other.getY());
+        return (x < other.getX() + other.getWidth() &&
+                x + this.width > other.getX() &&
+                y < other.getY() + other.getHeight() &&
+                y + this.height > other.getY());
     }
 }
