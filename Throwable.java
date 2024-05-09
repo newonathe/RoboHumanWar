@@ -36,7 +36,7 @@ public abstract class Throwable extends GameObject {
         if (collided) {
             if (object instanceof Fence || object instanceof Player) {
                 handleBounceCollision();
-            } else if (object instanceof LandObstacle) {
+            } else if (object instanceof Land) {
                 handleGroundCollision();
             }
         }

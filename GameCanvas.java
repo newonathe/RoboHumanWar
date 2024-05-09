@@ -7,7 +7,7 @@ public class GameCanvas extends JComponent {
     CanProjectile can;
     Fence fence;
     ImageIcon catImage, dogImage, fenceImage;
-    LandObstacle groundObstacle;
+    Land ground;
     Player dog, cat;
     Timer animationTimer;
     
