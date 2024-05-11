@@ -1,4 +1,4 @@
-import java.awt.*;
+    import java.awt.*;
 // import java.awt.event.*;
 import javax.swing.*;
 
@@ -6,7 +6,6 @@ public class AngleDirection extends GameObject {
     int pivot1, pivot2;
     double angle;
     boolean goUp;
-    Player currentPlayer;
     Timer timer;
     double rSpeed = 0.6;
 
