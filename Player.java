@@ -3,8 +3,7 @@ import java.awt.*;
 
 public class Player extends GameObject{
     
-    public int health;
-    public int maxHealth;
+    public int health, maxHealth, loc;
     protected boolean currentTurn, throwing, threw, dead;
     protected ImageIcon idle, throwingMotion, threwMotion, deadPlayer;
 
@@ -13,6 +12,7 @@ public class Player extends GameObject{
         super(x, y, image);
         this.maxHealth = maxHealth;
         health = maxHealth;
+        loc = x;
     }
 
     public void takeDamage(int damage) {
@@ -84,7 +84,7 @@ public class Player extends GameObject{
 
     // if x>960 = dog; else, cat
     public boolean playerPosition() {
-        return (super.x>960);
+        return (loc>960);
     }
 
     }

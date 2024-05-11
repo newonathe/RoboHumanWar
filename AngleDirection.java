@@ -1,93 +1,62 @@
-import javax.swing.ImageIcon;
+import java.awt.*;
+// import java.awt.event.*;
+import javax.swing.*;
 
 public class AngleDirection extends GameObject {
-    int angle;
-    boolean willGoDown;
-    boolean willGoUp;
+    int pivot1, pivot2;
+    double angle;
+    boolean goUp;
+    Player currentPlayer;
+    Timer timer;
+    double rSpeed = 0.6;
 
     public AngleDirection(int x, int y, ImageIcon image) {
         super(x, y, image);
+        pivot1 = x;
+        pivot2 = y+80;
     }
 
+    //call
     public void generateAngle(Player player) {
         if (player.playerPosition()){
-            angle = (int) (Math.random() * 180 + 90); //90-270
-            goUp();
+            angle = (int) (Math.random() * 115 + 85);
         } else {
-            angle = (int) (Math.random() * 180 - 90); //90 - -90
-            goUp();
-        }
-        isUpOrDown(player);
-    }
-
-    public int getAngle() {
-        return angle;
-    }
-    
-    public void isUpOrDown(Player player) {
-        if (player.playerPosition()) {
-            if (angle == 270) {
-                goDown();
-            } else if (angle == 90) {
-                goUp();
-            }
-        } else {
-            if (angle == 90) {
-                goDown();
-            } else if (angle == -90) {
-                goUp();
-            }
+            angle = (int) (Math.random() * 115 - 20);
         }
     }
 
+    //call
     public void rotateAngle(Player player) {
-        if (willGoUp) {
-            rotateAngleUp(player);
-        } else if (willGoDown) {
-            rotateAngleDown(player);
-        }
-    }
-
-    private void goUp(){
-        willGoUp = true;
-        willGoDown = false;
-    }
-
-    private void goDown(){
-        willGoDown = true;
-        willGoUp = false;
-    }
-
-    private void rotateAngleUp(Player player) {
         if (player.playerPosition()){
-            if (270>angle && angle>90) {
-                angle++;
+            if (Math.round(angle) == 200) {
+                goUp = true;
+            } else if ( Math.round(angle) == 85) {
+                goUp = false;
+            }
+            
+            if (goUp) {
+                angle -= rSpeed;
             } else {
-                angle = 270;
+                angle += rSpeed;
             }
         } else {
-            if (90>angle && angle>-90) {
-                angle++;
+            if (Math.round(angle) == -20) {
+                goUp = true;
+            } else if ( Math.round(angle) == 95) {
+                goUp = false;
+            }
+            
+            if (goUp) {
+                angle += rSpeed;
             } else {
-                angle = 90;
+                angle -= rSpeed;
             }
         }
     }
 
-
-    private void rotateAngleDown(Player player) {
-        if (player.playerPosition()){
-            if (270>angle && angle>90) {
-                angle--;
-            } else {
-                angle = 90;
-            }
-        } else {
-            if (90>angle && angle>-90) {
-                angle--;
-            } else {
-                angle = -90;
-            }
-        }
+    public void paint(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.rotate(Math.toRadians(90 - angle), pivot1, pivot2);
+        image.paintIcon(this, g2d, x, y);
     }
 }
