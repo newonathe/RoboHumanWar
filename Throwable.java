@@ -41,12 +41,14 @@ public abstract class Throwable extends GameObject {
             }
         }
         return collided; 
-    }
+    } //projectile removal in canvas
 
     protected void handleBounceCollision() {
         velocityX *= -BOUNCE_REDUCTION; // Reverse direction, lose some velocity
         isSliding = true; 
     }
+
+    protected abstract void handlePlayerCollision(Player player);
 
     private void handleGroundCollision() {
         isSliding = true; 

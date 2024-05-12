@@ -14,6 +14,10 @@ public class GameFrame {
         canvas.setPreferredSize(new Dimension(w,h));
     }
 
+    public JFrame getFrame() {
+        return frame;
+    }
+
     public void setUpGui () {
         Container contentPane = frame.getContentPane();
         contentPane.add(canvas);
@@ -22,5 +26,6 @@ public class GameFrame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
         frame.setResizable(false);
+        frame.setFocusable(true);
     }
 }

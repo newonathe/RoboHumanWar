@@ -9,10 +9,11 @@ public class AngleDirection extends GameObject {
     Timer timer;
     double rSpeed = 0.6;
 
-    public AngleDirection(int x, int y, ImageIcon image) {
+    public AngleDirection(int x, int y, ImageIcon image, Player player) {
         super(x, y, image);
         pivot1 = x;
         pivot2 = y+80;
+        generateAngle(player);
     }
 
     //call
@@ -51,6 +52,10 @@ public class AngleDirection extends GameObject {
                 angle -= rSpeed;
             }
         }
+    }
+
+    public double getAngle() {
+        return angle;
     }
 
     public void paint(Graphics g) {

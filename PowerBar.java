@@ -21,7 +21,6 @@ public class PowerBar extends GameObject{
         barWidth = 30;
     }
 
-    //can be manipulated in case 100 is too high/low
     public int getThrowStrength(){
         return barStrength;
     }
@@ -44,8 +43,6 @@ public class PowerBar extends GameObject{
         Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(Color.blue);
         g2d.fillRect(x, y-barStrength, barWidth, barStrength);
-        // g2d.rotate(Math.toRadians(45));
-        // g2d.dispose();
     }
 }
 
