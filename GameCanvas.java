@@ -10,7 +10,7 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     BoneProjectile bone;
     CanProjectile can;
     Fence fence; // done
-    ImageIcon catImage, dogImage, fenceImage, arrowImage;
+    ImageIcon catImage, dogImage, fenceImage, arrowImage, landImage;
     Land ground;
     Player dog, cat; // done
     PowerBar catBar, dogBar; //done
@@ -34,10 +34,12 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         dogImage = new ImageIcon("resources/dog.png");
         fenceImage = new ImageIcon("resources/fence.png");
         arrowImage = new ImageIcon("resources/arrow.png");
+        landImage = new ImageIcon("resources/land.png");
         
         cat = new Player(catX, y, catImage, 100);
         dog = new Player(dogX, y, dogImage, 100);
         fence = new Fence(620, 400, fenceImage); 
+        ground = new Land(0, 660, landImage); // test
 
         arrowCat = new AngleDirection(catX+150, y-100, arrowImage, cat);
         arrowDog = new AngleDirection(dogX-30, y-100, arrowImage, dog);
@@ -58,7 +60,9 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         AffineTransform reset = g2d.getTransform();
-        
+
+        ground.paintComponent(g2d);
+
         switch (currentState) {
             case IDLE:
                 break;
@@ -100,14 +104,35 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         }
 
         for (Throwable projectile : projectiles) {
+            // if (catTurn) {    
+                // if (projectile.checkCollision(dog)) {
+                //     projectile.handlePlayerCollision(dog);
+                //     projectiles.remove(projectile);
+                // }
+            // } else { 
+                if (projectile.checkCollision(cat)) {
+                    projectile.handlePlayerCollision(cat);
+                    projectiles.remove(projectile);
+                }
+            // }
+        
+            projectile.checkCollision(fence);
+            projectile.checkCollision(ground);
+            
             projectile.paintComponent(g2d);
         }
 
         cat.paintComponent(g2d);
-        cat.healthbar(g2d, 60 + 5*(cat.maxHealth - cat.health));
+        
+        cat.healthbar(g2d, 84);
+        g2d.setTransform(reset);
+
         dog.paintComponent(g2d);
         dog.healthbar(g2d, 720);
+        
+
         fence.paintComponent(g2d);
+        
     }
 
     @Override
@@ -117,11 +142,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                 currentState = TurnState.AWAITING_ARROW;
                 break;
             case AWAITING_ARROW:
-                // if (catTurn){
-                    arrowCat.setVisible(true); 
-                // } else {
-                     arrowDog.setVisible(true);
-                // }
                 currentState = TurnState.ROTATING_ARROW;
                 break;
             case ROTATING_ARROW:
@@ -154,14 +174,11 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                 // }
                 break;
             case FIRING_PROJECTILE:
-                projectiles.add(new CanProjectile(catX, y, catImage, catBar.getThrowStrength(), arrowCat.getAngle()));
-                projectiles.add(new BoneProjectile(dogX, y, dogImage, catBar.getThrowStrength(), arrowDog.getAngle()));
+                // projectiles.add(new CanProjectile(catX, y, catImage, catBar.getThrowStrength(), arrowCat.getAngle()));
+                projectiles.add(new BoneProjectile(dogX, y, dogImage, dogBar.getThrowStrength(), arrowDog.getAngle()));
             
                 catBar.reset();
                 dogBar.reset();
-
-                arrowCat.setVisible(false);
-                arrowDog.setVisible(false);
 
                 currentState = TurnState.IDLE;
                 // catTurn = !catTurn; // Switch turns

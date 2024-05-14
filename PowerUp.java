@@ -40,4 +40,12 @@ public class PowerUp {
     public void tripleThrowPowerUp(Player player) {
         // player.tripleThrow();
     }
+
+    class BigBone {
+
+    }
+
+    class Fish {
+        
+    }
 }

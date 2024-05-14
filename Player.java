@@ -35,7 +35,7 @@ public class Player extends GameObject{
 
     public void healthbar(Graphics g, int xPosition) {
         g.setColor(Color.RED);
-        g.fillRect(xPosition, 100, maxHealth*5, 30);
+        g.fillRect(xPosition, 100, health*5, 30);
     }
 
     //just the coordinates of x and y here but in the logic for the actual game lets make

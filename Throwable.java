@@ -50,10 +50,9 @@ public abstract class Throwable extends GameObject {
 
     protected void handleBounceCollision() {
         velocityX *= -BOUNCE_REDUCTION; // Reverse direction, lose some velocity
-        isSliding = true; // Start sliding after bouncing
     } 
 
-    protected abstract void handlePlayerCollision(Player player);
+    protected abstract void handlePlayerCollision(Player player); // take damage and special effects for powerupsw
 
     private void handleGroundCollision() {
         isSliding = true; 
@@ -63,6 +62,7 @@ public abstract class Throwable extends GameObject {
         // Gradually reduce velocity until below threshold
         if (Math.abs(velocityX) > VELOCITY_THRESHOLD) {
             velocityX -= Math.signum(velocityX) * SLIDE_FRICTION;
+            x += velocityX;
         } else {
             velocityX = 0; // Stop completely
             isSliding = false; // No longer sliding
