@@ -63,7 +63,7 @@ public class AngleDirection extends GameObject {
     }
 
     public double getAngle() {
-        return angle;
+        return -angle;
     }
 
     public void paint(Graphics g) {

@@ -18,7 +18,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     Timer animationTimer;
     
     int catX, dogX, y;
-    boolean lockAngle;
 
     enum TurnState {
         IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
@@ -27,7 +26,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     TurnState currentState;
     
     public GameCanvas() {
-        lockAngle = false;
         catX = 100;
         dogX = 1060;
         y = 500;
@@ -61,26 +59,55 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         Graphics2D g2d = (Graphics2D) g;
         AffineTransform reset = g2d.getTransform();
         
-        arrowCat.paint(g2d);
-        g2d.setTransform(reset);
-        arrowDog.paint(g2d);
-        g2d.setTransform(reset);
+        switch (currentState) {
+            case IDLE:
+                break;
+            case AWAITING_ARROW:
+                // if (catTurn){
+                    arrowCat.paint(g2d);
+                    g2d.setTransform(reset);
+                // } else {
+                    arrowDog.paint(g2d);
+                    g2d.setTransform(reset);
+                // }
+                break;
+            case ROTATING_ARROW:
+                // if (catTurn){
+                    arrowCat.paint(g2d);
+                    g2d.setTransform(reset);
+                // } else {
+                    arrowDog.paint(g2d);
+                    g2d.setTransform(reset);
+                    // }
+                break;
+            case CHARGING_POWER:
+                // if (catTurn){
+                    catBar.paint(g2d);
+                    g2d.setTransform(reset);
+                // } else {
+                    dogBar.paint(g2d);
+                    g2d.setTransform(reset);
+                    // }
 
-        catBar.paint(g2d);
-        g2d.setTransform(reset);
-        dogBar.paint(g2d);
-        g2d.setTransform(reset);
+                // if (catTurn){
+                    arrowCat.paint(g2d);
+                    g2d.setTransform(reset);
+                // } else {
+                    arrowDog.paint(g2d);
+                    g2d.setTransform(reset);
+                    // }
+                break;
+        }
 
+        for (Throwable projectile : projectiles) {
+            projectile.paintComponent(g2d);
+        }
 
         cat.paintComponent(g2d);
         cat.healthbar(g2d, 60 + 5*(cat.maxHealth - cat.health));
         dog.paintComponent(g2d);
         dog.healthbar(g2d, 720);
         fence.paintComponent(g2d);
-
-        for (Throwable projectile : projectiles) {
-            projectile.paintComponent(g2d);
-        }
     }
 
     @Override
@@ -106,26 +133,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         }
     }
     
-    // @Override
-    // public void mouseClicked(MouseEvent e) {
-    //     // if (cat.turnTracker() && !lockAngle) {
-    //         // lockAngle = true; // Lock the angle once clicked
-    //         // int throwStrength = bar.getThrowStrength();
-    //         // double throwAngle = arrowCat.getAngle();
-    //         // projectiles.add(new CanProjectile(catX, y, catImage, throwStrength, throwAngle));
-    //         // cat.setTurn(false);
-    //         // dog.setTurn(true);
-    //         // bar.generateBar();
-    //     // } else if (dog.turnTracker() && !lockAngle) {
-    //     //     lockAngle = true;
-    //     //     int throwStrength = bar.getThrowStrength();
-    //     //     double throwAngle = arrowDog.getAngle();
-    //     //     projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrength, throwAngle));
-    //     //     dog.setTurn(false);
-    //     //     cat.setTurn(true);
-    //     //     bar.generateBar();
-    //     // }
-    // }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -147,13 +154,8 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                 // }
                 break;
             case FIRING_PROJECTILE:
-                int throwStrengthC = catBar.getThrowStrength();
-                int throwStrengthD = dogBar.getThrowStrength();
-                double throwAngleC = -arrowCat.getAngle();
-                double throwAngleD = -arrowDog.getAngle();
-                
-                projectiles.add(new CanProjectile(catX, y, catImage, throwStrengthC, throwAngleC));
-                projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrengthD, throwAngleD));
+                projectiles.add(new CanProjectile(catX, y, catImage, catBar.getThrowStrength(), arrowCat.getAngle()));
+                projectiles.add(new BoneProjectile(dogX, y, dogImage, catBar.getThrowStrength(), arrowDog.getAngle()));
             
                 catBar.reset();
                 dogBar.reset();
@@ -171,32 +173,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         }
 
         repaint();
-    
-
-        
-        // // TODO Auto-generated method stub
-        // catBar.bounceBar();
-        // dogBar.bounceBar();
-        
-        // // int count = 0;
-        // // while (!lockAngle && count <= 3) {
-        //     arrowCat.rotateAngle(cat);
-        //     arrowDog.rotateAngle(dog);
-
-            // int throwStrengthC = catBar.getThrowStrength();
-            // int throwStrengthD = dogBar.getThrowStrength();
-            // double throwAngleC = -arrowCat.getAngle();
-            // double throwAngleD = -arrowDog.getAngle();
-            // projectiles.add(new CanProjectile(catX, y, catImage, throwStrengthC, throwAngleC));
-            // projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrengthD, throwAngleD));
-
-            // for (Throwable projectile : projectiles) {
-            //     projectile.update();
-            // }
-
-            // repaint();
-        //     count++;
-        // }
     }
 
     @Override
