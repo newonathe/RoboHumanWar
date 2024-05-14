@@ -181,11 +181,9 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                 projectile.update();
                 projectiles.remove(projectile); 
                 break;
-            } else {
             }
             projectile.update();
         }
-
         repaint();
     }
 
