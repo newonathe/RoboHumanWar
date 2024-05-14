@@ -28,15 +28,13 @@ public abstract class GameObject extends JPanel {
     public void paintComponent(Graphics g) {
         image.paintIcon(this, g, x, y);
     }
-    // public void draw(Graphics g) {
-    //     g.drawImage(image, (int) x, (int) y, null); 
-    // }
 
-    // Basic rectangular collision detection (could be refined later)
     public boolean checkCollision(GameObject other) {
-        return (x < other.getX() + other.getWidth() &&
-                x + this.width > other.getX() &&
-                y < other.getY() + other.getHeight() &&
-                y + this.height > other.getY());
-    }
+    int tolerance = 10; // Adjust
+    return (x - tolerance < other.getX() + other.getWidth() &&
+            x + this.width + tolerance > other.getX() &&
+            y - tolerance < other.getY() + other.getHeight() &&
+            y + this.height + tolerance > other.getY());
+}
+
 }

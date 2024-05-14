@@ -6,18 +6,20 @@ import java.util.ArrayList;
 
 public class GameCanvas extends JComponent implements ActionListener, MouseListener {
     AngleDirection arrowCat, arrowDog; // done
+    
     ArrayList<Throwable> projectiles;
-    BoneProjectile bone;
-    CanProjectile can;
+    
     Fence fence; // done
     ImageIcon catImage, dogImage, fenceImage, arrowImage, landImage;
     Land ground;
-    Player dog, cat; // done
+    Player cat, dog; // done
     PowerBar catBar, dogBar; //done
     
     Timer animationTimer;
     
-    int catX, dogX, y;
+    int catX, dogX, y, offSetXd, offSetYd, offSetXc, offSetYc;
+
+    boolean catTurn;
 
     enum TurnState {
         IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
@@ -38,7 +40,7 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         
         cat = new Player(catX, y, catImage, 100);
         dog = new Player(dogX, y, dogImage, 100);
-        fence = new Fence(620, 400, fenceImage); 
+        fence = new Fence(620, 400, fenceImage);
         ground = new Land(0, 660, landImage); // test
 
         arrowCat = new AngleDirection(catX+150, y-100, arrowImage, cat);
@@ -49,8 +51,12 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         projectiles = new ArrayList<>();
 
         currentState = TurnState.IDLE;
-        arrowCat.setVisible(false);
-        arrowDog.setVisible(false); 
+        catTurn = false;
+
+        offSetXc = (catImage.getIconWidth())/2;
+        offSetYc = (catImage.getIconHeight())/2;
+        offSetXd = (dogImage.getIconWidth())/2;
+        offSetYd = (dogImage.getIconHeight())/2;
 
         animationTimer = new Timer(5, this);
         animationTimer.start();
@@ -64,57 +70,47 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         ground.paintComponent(g2d);
 
         switch (currentState) {
-            case IDLE:
-                break;
             case AWAITING_ARROW:
-                // if (catTurn){
+                if (catTurn){
                     arrowCat.paint(g2d);
                     g2d.setTransform(reset);
-                // } else {
+                } else {
                     arrowDog.paint(g2d);
                     g2d.setTransform(reset);
-                // }
+                }
                 break;
             case ROTATING_ARROW:
-                // if (catTurn){
+                if (catTurn){
                     arrowCat.paint(g2d);
                     g2d.setTransform(reset);
-                // } else {
+                } else {
                     arrowDog.paint(g2d);
                     g2d.setTransform(reset);
-                    // }
+                    }
                 break;
             case CHARGING_POWER:
-                // if (catTurn){
+                if (catTurn){
                     catBar.paint(g2d);
                     g2d.setTransform(reset);
-                // } else {
-                    dogBar.paint(g2d);
-                    g2d.setTransform(reset);
-                    // }
-
-                // if (catTurn){
                     arrowCat.paint(g2d);
                     g2d.setTransform(reset);
-                // } else {
+                } else {
+                    dogBar.paint(g2d);
+                    g2d.setTransform(reset);
                     arrowDog.paint(g2d);
                     g2d.setTransform(reset);
-                    // }
+                    }
                 break;
         }
 
         for (Throwable projectile : projectiles) {
-            // if (catTurn) {    
-                // if (projectile.checkCollision(dog)) {
-                //     projectile.handlePlayerCollision(dog);
-                //     projectiles.remove(projectile);
-                // }
-            // } else { 
-                if (projectile.checkCollision(cat)) {
+            if (catTurn && projectile.checkCollision(cat)) {
                     projectile.handlePlayerCollision(cat);
                     projectiles.remove(projectile);
-                }
-            // }
+             } else if (!catTurn && projectile.checkCollision(dog)) {
+                    projectile.handlePlayerCollision(dog);
+                    projectiles.remove(projectile);
+            }
         
             projectile.checkCollision(fence);
             projectile.checkCollision(ground);
@@ -123,18 +119,14 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         }
 
         cat.paintComponent(g2d);
-        
         cat.healthbar(g2d, 84);
-        g2d.setTransform(reset);
 
         dog.paintComponent(g2d);
         dog.healthbar(g2d, 720);
         
-
         fence.paintComponent(g2d);
-        
     }
-
+    
     @Override
     public void mouseClicked(MouseEvent e) {
         switch (currentState) {
@@ -157,35 +149,40 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (currentState) {
-            case IDLE:
-                break;
             case ROTATING_ARROW:
-                // if (catTurn){
+                if (catTurn){
                      arrowCat.rotateAngle(cat);
-                //  } else {
+                 } else {
                      arrowDog.rotateAngle(dog);
-                //  }
+                 }
                 break;
             case CHARGING_POWER:
-                // if (catTurn){
+                if (catTurn){
                     catBar.bounceBar(); 
-                // } else { 
+                } else { 
                     dogBar.bounceBar();
-                // }
+                }
                 break;
             case FIRING_PROJECTILE:
-                // projectiles.add(new CanProjectile(catX, y, catImage, catBar.getThrowStrength(), arrowCat.getAngle()));
-                projectiles.add(new BoneProjectile(dogX, y, dogImage, dogBar.getThrowStrength(), arrowDog.getAngle()));
-            
-                catBar.reset();
-                dogBar.reset();
-
+                if (catTurn) {
+                    projectiles.add(new CanProjectile(catX+offSetXc, y-offSetYc, catImage, catBar.getThrowStrength(), arrowCat.getAngle())); 
+                    catBar.reset();
+                } else {
+                    projectiles.add(new BoneProjectile(dogX-offSetXd, y-offSetYd, dogImage, dogBar.getThrowStrength(), arrowDog.getAngle()));
+                    dogBar.reset();
+                }
+                catTurn = !catTurn; // Switch turns
                 currentState = TurnState.IDLE;
-                // catTurn = !catTurn; // Switch turns
                 break;
         }
         
         for (Throwable projectile : projectiles) {
+            if (projectile.getVelocityX() == 0) {
+                projectile.update();
+                projectiles.remove(projectile); 
+                break;
+            } else {
+            }
             projectile.update();
         }
 
