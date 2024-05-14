@@ -15,8 +15,8 @@ public abstract class Throwable extends GameObject {
         this.damage = damage;
 
         // Calculate initial velocities based on throw angle
-        this.velocityX = initialVelocity * Math.cos(Math.toRadians(angle));
-        this.velocityY = initialVelocity * Math.sin(Math.toRadians(angle));
+        this.velocityX = initialVelocity/5 * Math.cos(Math.toRadians(angle));
+        this.velocityY = initialVelocity/5 * Math.sin(Math.toRadians(angle));
     }
 
     public void update() {

@@ -24,7 +24,7 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
     }
 
-    TurnState currentState = TurnState.IDLE;
+    TurnState currentState;
     
     public GameCanvas() {
         lockAngle = false;
@@ -48,6 +48,10 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
 
         projectiles = new ArrayList<>();
 
+        currentState = TurnState.IDLE;
+        arrowCat.setVisible(false);
+        arrowDog.setVisible(false); 
+
         animationTimer = new Timer(5, this);
         animationTimer.start();
     }
@@ -59,12 +63,14 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         
         arrowCat.paint(g2d);
         g2d.setTransform(reset);
-
         arrowDog.paint(g2d);
         g2d.setTransform(reset);
 
         catBar.paint(g2d);
+        g2d.setTransform(reset);
         dogBar.paint(g2d);
+        g2d.setTransform(reset);
+
 
         cat.paintComponent(g2d);
         cat.healthbar(g2d, 60 + 5*(cat.maxHealth - cat.health));
@@ -80,6 +86,9 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     @Override
     public void mouseClicked(MouseEvent e) {
         switch (currentState) {
+            case IDLE:
+                currentState = TurnState.AWAITING_ARROW;
+                break;
             case AWAITING_ARROW:
                 // if (catTurn){
                     arrowCat.setVisible(true); 
@@ -122,9 +131,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     public void actionPerformed(ActionEvent e) {
         switch (currentState) {
             case IDLE:
-                arrowCat.setVisible(false);
-                arrowDog.setVisible(false);
-                currentState = TurnState.AWAITING_ARROW;
                 break;
             case ROTATING_ARROW:
                 // if (catTurn){
@@ -141,8 +147,8 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                 // }
                 break;
             case FIRING_PROJECTILE:
-                int throwStrengthC = catBar.getThrowStrength()/4;
-                int throwStrengthD = dogBar.getThrowStrength()/4;
+                int throwStrengthC = catBar.getThrowStrength();
+                int throwStrengthD = dogBar.getThrowStrength();
                 double throwAngleC = -arrowCat.getAngle();
                 double throwAngleD = -arrowDog.getAngle();
                 
@@ -151,6 +157,9 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
             
                 catBar.reset();
                 dogBar.reset();
+
+                arrowCat.setVisible(false);
+                arrowDog.setVisible(false);
 
                 currentState = TurnState.IDLE;
                 // catTurn = !catTurn; // Switch turns
