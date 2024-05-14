@@ -8,26 +8,31 @@ public abstract class Throwable extends GameObject {
     private static final double GRAVITY = 0.2; 
     private static final double BOUNCE_REDUCTION = 0.6; 
     private static final double SLIDE_FRICTION = 0.1; 
+    private static final double VELOCITY_THRESHOLD = 0.1; // For stopping the slide
 
     public Throwable(int x, int y, ImageIcon image, double initialVelocity, double angle, int damage) {
-        super(x, y, image); // Call the parent (GameObject) constructor
+        super(x, y, image); 
         this.damage = damage;
-        isSliding = false; 
 
         // Calculate initial velocities based on throw angle
         this.velocityX = initialVelocity * Math.cos(Math.toRadians(angle));
         this.velocityY = initialVelocity * Math.sin(Math.toRadians(angle));
     }
 
-
     public void update() {
         if (!isSliding) { 
+            // If in the air, apply gravity and update position
             x += velocityX;
             y += velocityY;
             velocityY += GRAVITY; // Apply gravity
         } else {
+            // If sliding, apply friction and check for stopping
             slowDown(); 
         }
+    }
+    
+    public double getVelocityX() {
+        return velocityX;
     }
 
     @Override
@@ -41,12 +46,12 @@ public abstract class Throwable extends GameObject {
             }
         }
         return collided; 
-    } //projectile removal in canvas
+    }
 
     protected void handleBounceCollision() {
         velocityX *= -BOUNCE_REDUCTION; // Reverse direction, lose some velocity
-        isSliding = true; 
-    }
+        isSliding = true; // Start sliding after bouncing
+    } 
 
     protected abstract void handlePlayerCollision(Player player);
 
@@ -55,11 +60,12 @@ public abstract class Throwable extends GameObject {
     }
 
     private void slowDown() {
-        if (Math.abs(velocityX) > 0.1) { 
+        // Gradually reduce velocity until below threshold
+        if (Math.abs(velocityX) > VELOCITY_THRESHOLD) {
             velocityX -= Math.signum(velocityX) * SLIDE_FRICTION;
         } else {
-            velocityX = 0;
-            isSliding = false; 
+            velocityX = 0; // Stop completely
+            isSliding = false; // No longer sliding
         }
-    } 
+    }
 }

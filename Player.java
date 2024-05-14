@@ -1,11 +1,14 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 
 public class Player extends GameObject{
-    
-    public int health, maxHealth, loc;
+    //properties
+    protected int health, maxHealth, loc;
     protected boolean currentTurn, throwing, threw, dead;
     protected ImageIcon idle, throwingMotion, threwMotion, deadPlayer;
+    protected List<PowerUp> powerUps;
 
 
     public Player (int x, int y, ImageIcon image, int maxHealth) {
@@ -13,7 +16,10 @@ public class Player extends GameObject{
         this.maxHealth = maxHealth;
         health = maxHealth;
         loc = x;
+
+        powerUps = new ArrayList<>();
     }
+    
 
     public void takeDamage(int damage) {
         health -= damage;
@@ -90,47 +96,5 @@ public class Player extends GameObject{
     }
 
 
-    class PowerUps {
-    
-        ImageIcon heal;
-        ImageIcon bigBone;
-        ImageIcon fish;
-        ImageIcon wind;
-        ImageIcon tripleThrow;
-    
-        public PowerUps() {
-            // heal = new Image("heal.png");
-            // bigBone = new Image("bigBone.png");
-            // fish = new Image("fish.png");
-            // wind = new Image("wind.png");
-            // tripleThrow = new Image("tripleThrow.png");
-        }
-    
-        public void healPowerUp(Player player) {
-            if (player.health < player.maxHealth) {
-                player.health += 10;
-            }
-            else {
-                player.health = player.maxHealth;
-            }
-          }
-        
-        public void bigBonePowerUp(Player player) {
-            // player.bigBone();
-        }
-        
-        public void fishPowerUp(Player player) {
-            // player.fish();
-        }
-    
-        public void windPowerUp(Player player) {
-            // player.wind();
-        }
-    
-        public void tripleThrowPowerUp(Player player) {
-            // player.tripleThrow();
-        }
-    }
-    
     
     

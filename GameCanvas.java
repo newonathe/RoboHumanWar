@@ -19,6 +19,12 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
     
     int catX, dogX, y;
     boolean lockAngle;
+
+    enum TurnState {
+        IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
+    }
+
+    TurnState currentState = TurnState.IDLE;
     
     public GameCanvas() {
         lockAngle = false;
@@ -42,7 +48,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
 
         projectiles = new ArrayList<>();
 
-        this.addMouseListener(this);
         animationTimer = new Timer(5, this);
         animationTimer.start();
     }
@@ -74,48 +79,113 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        // if (cat.turnTracker() && !lockAngle) {
-            // lockAngle = true; // Lock the angle once clicked
-            // int throwStrength = bar.getThrowStrength();
-            // double throwAngle = arrowCat.getAngle();
-            // projectiles.add(new CanProjectile(catX, y, catImage, throwStrength, throwAngle));
-            // cat.setTurn(false);
-            // dog.setTurn(true);
-            // bar.generateBar();
-        // } else if (dog.turnTracker() && !lockAngle) {
-        //     lockAngle = true;
-        //     int throwStrength = bar.getThrowStrength();
-        //     double throwAngle = arrowDog.getAngle();
-        //     projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrength, throwAngle));
-        //     dog.setTurn(false);
-        //     cat.setTurn(true);
-        //     bar.generateBar();
-        // }
+        switch (currentState) {
+            case AWAITING_ARROW:
+                // if (catTurn){
+                    arrowCat.setVisible(true); 
+                // } else {
+                     arrowDog.setVisible(true);
+                // }
+                currentState = TurnState.ROTATING_ARROW;
+                break;
+            case ROTATING_ARROW:
+                currentState = TurnState.CHARGING_POWER;
+                break;
+            case CHARGING_POWER:
+                currentState = TurnState.FIRING_PROJECTILE;
+                break;
+        }
     }
+    
+    // @Override
+    // public void mouseClicked(MouseEvent e) {
+    //     // if (cat.turnTracker() && !lockAngle) {
+    //         // lockAngle = true; // Lock the angle once clicked
+    //         // int throwStrength = bar.getThrowStrength();
+    //         // double throwAngle = arrowCat.getAngle();
+    //         // projectiles.add(new CanProjectile(catX, y, catImage, throwStrength, throwAngle));
+    //         // cat.setTurn(false);
+    //         // dog.setTurn(true);
+    //         // bar.generateBar();
+    //     // } else if (dog.turnTracker() && !lockAngle) {
+    //     //     lockAngle = true;
+    //     //     int throwStrength = bar.getThrowStrength();
+    //     //     double throwAngle = arrowDog.getAngle();
+    //     //     projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrength, throwAngle));
+    //     //     dog.setTurn(false);
+    //     //     cat.setTurn(true);
+    //     //     bar.generateBar();
+    //     // }
+    // }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO Auto-generated method stub
-        catBar.bounceBar();
-        dogBar.bounceBar();
+        switch (currentState) {
+            case IDLE:
+                arrowCat.setVisible(false);
+                arrowDog.setVisible(false);
+                currentState = TurnState.AWAITING_ARROW;
+                break;
+            case ROTATING_ARROW:
+                // if (catTurn){
+                     arrowCat.rotateAngle(cat);
+                //  } else {
+                     arrowDog.rotateAngle(dog);
+                //  }
+                break;
+            case CHARGING_POWER:
+                // if (catTurn){
+                    catBar.bounceBar(); 
+                // } else { 
+                    dogBar.bounceBar();
+                // }
+                break;
+            case FIRING_PROJECTILE:
+                int throwStrengthC = catBar.getThrowStrength()/4;
+                int throwStrengthD = dogBar.getThrowStrength()/4;
+                double throwAngleC = -arrowCat.getAngle();
+                double throwAngleD = -arrowDog.getAngle();
+                
+                projectiles.add(new CanProjectile(catX, y, catImage, throwStrengthC, throwAngleC));
+                projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrengthD, throwAngleD));
+            
+                catBar.reset();
+                dogBar.reset();
+
+                currentState = TurnState.IDLE;
+                // catTurn = !catTurn; // Switch turns
+                break;
+        }
         
-        // int count = 0;
-        // while (!lockAngle && count <= 3) {
-            arrowCat.rotateAngle(cat);
-            arrowDog.rotateAngle(dog);
+        for (Throwable projectile : projectiles) {
+            projectile.update();
+        }
 
-            int throwStrengthC = catBar.getThrowStrength();
-            int throwStrengthD = dogBar.getThrowStrength();
-            double throwAngleC = -arrowCat.getAngle();
-            double throwAngleD = -arrowDog.getAngle();
-            projectiles.add(new CanProjectile(catX, y, catImage, throwStrengthC, throwAngleC));
-            projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrengthD, throwAngleD));
+        repaint();
+    
 
-            for (Throwable projectile : projectiles) {
-                projectile.update();
-            }
+        
+        // // TODO Auto-generated method stub
+        // catBar.bounceBar();
+        // dogBar.bounceBar();
+        
+        // // int count = 0;
+        // // while (!lockAngle && count <= 3) {
+        //     arrowCat.rotateAngle(cat);
+        //     arrowDog.rotateAngle(dog);
 
-            repaint();
+            // int throwStrengthC = catBar.getThrowStrength();
+            // int throwStrengthD = dogBar.getThrowStrength();
+            // double throwAngleC = -arrowCat.getAngle();
+            // double throwAngleD = -arrowDog.getAngle();
+            // projectiles.add(new CanProjectile(catX, y, catImage, throwStrengthC, throwAngleC));
+            // projectiles.add(new BoneProjectile(dogX, y, dogImage, throwStrengthD, throwAngleD));
+
+            // for (Throwable projectile : projectiles) {
+            //     projectile.update();
+            // }
+
+            // repaint();
         //     count++;
         // }
     }

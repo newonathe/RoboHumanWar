@@ -22,6 +22,7 @@ public class GameFrame {
         Container contentPane = frame.getContentPane();
         contentPane.add(canvas);
         frame.pack();
+        frame.addMouseListener(canvas);
         // frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);

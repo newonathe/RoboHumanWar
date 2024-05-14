@@ -3,7 +3,8 @@ import java.awt.*;
 
 public class PowerBar extends GameObject{
     int barStrength;
-    int barWidth;
+    boolean isLocked = false;
+    int barWidth = 30;
     int x;
     int y;
     boolean willGoUp;
@@ -13,19 +14,29 @@ public class PowerBar extends GameObject{
         super(x, y, image);
         this.x = x-250; //+ width of image
         this.y = y+100; // + height of image
-        generateBar();
+        reset();
     } 
+
+    public void reset() {
+        isLocked = false;
+        generateBar();
+    }
 
     public void generateBar() {
         barStrength = (int) (Math.random() * 100);
-        barWidth = 30;
     }
 
-    public int getThrowStrength(){
+    public int getThrowStrength() {
+        isLocked = true; // Lock the bar when this method is called
         return barStrength;
     }
 
     public void bounceBar() {
+        if (isLocked){
+            generateBar();
+            return;
+        } 
+        
         if (barStrength == 0) {
            willGoUp = true;
         } else if (barStrength == 100) {

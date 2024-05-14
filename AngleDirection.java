@@ -8,6 +8,7 @@ public class AngleDirection extends GameObject {
     boolean goUp;
     Timer timer;
     double rSpeed = 0.6;
+    boolean rotating = true;
 
     public AngleDirection(int x, int y, ImageIcon image, Player player) {
         super(x, y, image);
@@ -18,6 +19,7 @@ public class AngleDirection extends GameObject {
 
     //call
     public void generateAngle(Player player) {
+        rotating = true;
         if (player.playerPosition()){
             angle = (int) (Math.random() * 115 + 85);
         } else {
@@ -27,31 +29,37 @@ public class AngleDirection extends GameObject {
 
     //call
     public void rotateAngle(Player player) {
-        if (player.playerPosition()){
-            if (Math.round(angle) == 200) {
-                goUp = true;
-            } else if ( Math.round(angle) == 85) {
-                goUp = false;
-            }
-            
-            if (goUp) {
-                angle -= rSpeed;
+        if (rotating) {
+            if (player.playerPosition()){
+                if (Math.round(angle) == 200) {
+                    goUp = true;
+                } else if ( Math.round(angle) == 85) {
+                    goUp = false;
+                }
+                
+                if (goUp) {
+                    angle -= rSpeed;
+                } else {
+                    angle += rSpeed;
+                }
             } else {
-                angle += rSpeed;
-            }
-        } else {
-            if (Math.round(angle) == -20) {
-                goUp = true;
-            } else if ( Math.round(angle) == 95) {
-                goUp = false;
-            }
-            
-            if (goUp) {
-                angle += rSpeed;
-            } else {
-                angle -= rSpeed;
+                if (Math.round(angle) == -20) {
+                    goUp = true;
+                } else if ( Math.round(angle) == 95) {
+                    goUp = false;
+                }
+                
+                if (goUp) {
+                    angle += rSpeed;
+                } else {
+                    angle -= rSpeed;
+                }
             }
         }
+    }
+
+    public void stopRotation() {
+        rotating = false; // Stop the rotation
     }
 
     public double getAngle() {
