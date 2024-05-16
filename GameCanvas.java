@@ -1,51 +1,53 @@
 import javax.swing.*;
+import java.io.*;
+import java.net.*;
+import javax.sound.sampled.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
-import java.io.*;
-import java.net.*;
 
-public class GameCanvas extends JComponent implements ActionListener, MouseListener {    
-    ImageIcon bgImage, humanface, robotface, humanImage, 
-    robotImage, humanFire, robotFire, humanThrew, robotThrew, 
-    fenceImage, arrowImage, energyorb, gunshot, landImage;
+/**
+ * GameCanvas class represents the main game panel.
+ * It handles all the game logic, graphics, and user interactions.
+ */
+public class GameCanvas extends JComponent implements ActionListener, MouseListener {
+    ImageIcon bgImage, humanface, robotface, humanfacewin, robotfacewin,
+    humanImage, robotImage, humanFire, robotFire, humanThrew, robotThrew,
+     fenceImage, arrowImage, energyorb, gunshot, landImage, humanWin, robotWin;
     
-    AngleDirection arrowHuman, arrowRobot; // done
-    PowerBar humanBar, robotBar; //done
+    AngleDirection arrowHuman, arrowRobot;
+    PowerBar humanBar, robotBar;
 
-    Fence fence; // done
+    Fence fence;
     Land ground;
-    Player robot; //PLAYER 1
-    Player human; //PLAYER 2
-
+    Player human, robot;
     ArrayList<Throwable> projectiles;
     
+    Socket socket;
+    /* ReadFromServer rfsRunnable;
+    WriteToServer wtsRunnable; */
     Timer animationTimer;
-    int humanXPosition, robotXPosition, YPosition;
+    int humanXPosition, robotXPosition, YPosition, playerID;
     boolean humanTurn;
+    String music, robotdmg, humandmg, gunshot1, gunshot2, laser1, laser2, collision, gameover, gameover2, lock;
     
     TurnState currentState;
     enum TurnState {
         IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
     }
     
-    // network field
-    private Socket socket;
-    private int playerID, throwStrength;
-    private double angle;
-    private ReadRotateArrow rra;
-    private ReadChargePower rcp;
-    private ReadFiringProjectile rfp;
-    private WriteRotateArrow wrt;
-    private WriteChargePower wcp;
-    private WriteFiringProjectile wfp;
-
+     /**
+     * Constructor for GameCanvas class.
+     * Initializes all the game components, graphics, and user interface elements.
+     */
     public GameCanvas() {
 
         bgImage = new ImageIcon("resources/bg.png");
         humanface = new ImageIcon("resources/humanface.png");
+        humanfacewin = new ImageIcon("resources/humanfacewin.png");
         robotface = new ImageIcon("resources/robotface.png");
+        robotfacewin = new ImageIcon("resources/robotfacewin.png");
         humanImage = new ImageIcon("resources/human.gif");
         robotImage = new ImageIcon("resources/robot.gif");
         humanFire = new ImageIcon("resources/humanturn.gif");
@@ -57,44 +59,56 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         energyorb = new ImageIcon("resources/energyorb.gif");
         gunshot = new ImageIcon("resources/gunshot.gif");
         landImage = new ImageIcon("resources/land.png");
+        humanWin = new ImageIcon("resources/humanWin.png");
+        robotWin = new ImageIcon("resources/robotWin.png");
+        music = "resources/music.wav";
+        robotdmg = "resources/robotdmg.wav";
+        humandmg = "resources/humandmg.wav";
+        gunshot1 = "resources/gunshot1.wav";
+        gunshot2 = "resources/gunshot2.wav";
+        laser1 = "resources/laser1.wav";
+        laser2 = "resources/laser2.wav";
+        collision = "resources/collision.wav";
+        gameover = "resources/gameover.wav";
+        gameover2 = "resources/gameover2.wav";
+        lock = "resources/lock.wav";
 
         humanXPosition = 100;
         robotXPosition = 1060;
         YPosition = 450;
 
+        human = new Player(humanXPosition, YPosition, humanImage, 100, "human");
+        human.idleMotion = humanImage;
+        human.throwingMotion = humanFire;
+        human.threwMotion = humanThrew;
+        robot = new Player(robotXPosition, YPosition, robotImage, 100, "robot");
+        robot.idleMotion = robotImage;
+        robot.throwingMotion = robotFire;
+        robot.threwMotion = robotThrew;
+
         fence = new Fence(590, 370, fenceImage, "fence"); 
         ground = new Land(0, 660, landImage, "ground");
 
+        arrowHuman = new AngleDirection(humanXPosition+120, YPosition-100, arrowImage, human, "arrowHuman");
+        arrowRobot = new AngleDirection(robotXPosition, YPosition-100, arrowImage, robot, "arrowRobot");
         humanBar = new PowerBar(humanXPosition+200, YPosition, arrowImage, "humanBar");
         robotBar = new PowerBar(robotXPosition+400, YPosition, arrowImage, "robotBar");
-        projectiles = new ArrayList<Throwable>();
+        projectiles = new ArrayList<>();
         currentState = TurnState.IDLE;
         humanTurn = true;
 
-        animationTimer = new Timer(5, this);
+        arrowHuman.generateAngle(human);
+        arrowRobot.generateAngle(robot);
+
+        animationTimer = new Timer(0, this);
         animationTimer.start();
+        PlayLoopMusic(music);
     }
-    
-    public void createP() {
-        if (playerID == 1) {
-            System.out.println("Waiting for Player #2 to connect...");
-            human = new Player(humanXPosition, YPosition, humanImage, 100, "human");
-            human.idleMotion = humanImage;
-            human.throwingMotion = humanFire;
-            human.threwMotion = humanThrew;
-            arrowHuman = new AngleDirection(humanXPosition+120, YPosition-100, arrowImage, human, "arrowHuman");
-            arrowHuman.generateAngle(human);
-        } else if (playerID == 2) {
-            System.out.println("Player #1 has connected!");
-            robot = new Player(robotXPosition, YPosition, robotImage, 100, "robot");
-            robot.idleMotion = robotImage;
-            robot.throwingMotion = robotFire;
-            robot.threwMotion = robotThrew;
-            arrowRobot = new AngleDirection(robotXPosition, YPosition-100, arrowImage, robot, "arrowRobot");
-            arrowRobot.generateAngle(robot);
-        }
-    }
-    
+
+    /**
+     * Paints the game components on the game canvas.
+     * @param g Graphics object used for painting.
+     */
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
@@ -102,6 +116,16 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
 
         bgImage.paintIcon(this, g2d, 0, 0);
         ground.paintComponent(g2d);
+
+        human.paintComponent(g2d);
+        human.healthbar(g2d, 60 + 5*(human.maxHealth - human.health));
+        humanface.paintIcon(this, g2d, 520, 25);
+
+        robot.paintComponent(g2d);
+        robot.healthbar(g2d, 720);
+        robotface.paintIcon(this, g2d, 640, 25);
+        
+        fence.paintComponent(g2d);
 
         switch (currentState) {
             case IDLE:
@@ -137,61 +161,98 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
                     g2d.setTransform(reset);
                     }
                 break;
-            case FIRING_PROJECTILE:
-            break;
+                case FIRING_PROJECTILE:
+                break;
         }
-
-        // human.currentMotion();
-        human.paintComponent(g2d);
-        human.healthbar(g2d, 60 + 5*(human.maxHealth - human.health));
-        humanface.paintIcon(this, g2d, 520, 25);
-
-        // robot.currentMotion();
-        robot.paintComponent(g2d);
-        robot.healthbar(g2d, 720);
-        robotface.paintIcon(this, g2d, 640, 25);
-        
-        fence.paintComponent(g2d);
 
         for (Throwable projectile : projectiles) {
             if (humanTurn && projectile.checkCollision(human)) {
+                    PlayMusic(humandmg);    
                     projectile.handlePlayerCollision(human);
-                    projectiles.clear();
+                    projectiles.clear();;
              } else if (!humanTurn && projectile.checkCollision(robot)) {
+                    PlayMusic(robotdmg);
                     projectile.handlePlayerCollision(robot);
-                    projectiles.clear();
+                    projectiles.clear();;
             }
         
             projectile.checkCollision(fence);
             projectile.checkCollision(ground);
+            if (projectile.checkCollision(fence) || projectile.checkCollision(ground)) {
+                if (human.getHealth() > 0 && robot.getHealth() > 0) {
+                    PlayMusic(collision);
+                }
+            }
             
             projectile.paintComponent(g2d);
         }
 
+        if (robot.getHealth() <= 0) {
+            humanWin.paintIcon(this, g2d, 340, 210);
+            humanfacewin.paintIcon(this, g2d, 470, 315);
+        } else if (human.getHealth() <= 0) {
+            robotWin.paintIcon(this, g2d, 340, 210);
+            robotfacewin.paintIcon(this, g2d, 470, 315);
+        }
     }
     
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if ((projectiles.isEmpty())) {
+    
+    /**
+ * Handles mouse click events on the game canvas.
+ * Determines the game state based on the player's actions and triggers appropriate actions.
+ *
+ * @param e The MouseEvent object representing the mouse click event.
+ */
+@Override
+public void mouseClicked(MouseEvent e) {
+    // Check if there are no projectiles in flight
+    if (projectiles.isEmpty()) {    
+        // Check if both players are still alive
+        if (human.getHealth() > 0 && robot.getHealth() > 0) {
+            // Switch between different game states based on the current state
             switch (currentState) {
                 case IDLE:
+                    // Set the player's idle animation
+                    human.setIdle();
+                    robot.setIdle();
+                    // Transition to the AWAITING_ARROW state
                     currentState = TurnState.AWAITING_ARROW;
                     break;
                 case AWAITING_ARROW:
+                    // Transition to the ROTATING_ARROW state
                     currentState = TurnState.ROTATING_ARROW;
                     break;
                 case ROTATING_ARROW:
+                    // Play the lock sound
+                    PlayMusic(lock);
+                    // Transition to the CHARGING_POWER state
                     currentState = TurnState.CHARGING_POWER;
                     break;
                 case CHARGING_POWER:
+                    // Play the lock sound
+                    PlayMusic(lock);
+                    // Play the gunshot or laser sound based on the player's turn
+                    if (humanTurn) {
+                        PlayMusic(gunshot1);
+                        PlayMusic(gunshot2);
+                    } else {
+                        PlayMusic(laser1);
+                        PlayMusic(laser2);
+                    }
+                    // Transition to the FIRING_PROJECTILE state
                     currentState = TurnState.FIRING_PROJECTILE;
                     break;
                 case FIRING_PROJECTILE:
+                    // Transition to the IDLE state
                     currentState = TurnState.IDLE;
                     break;
             }
+        } else {
+            // Play the game over sound
+            PlayMusic(gameover);
         }
     }
+}
     
 
     @Override
@@ -220,11 +281,11 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
             case FIRING_PROJECTILE:
                 if (humanTurn) {
                     human.setThrowState();
-                    projectiles.add(new Throwable(humanXPosition, YPosition, gunshot, throwStrength, angle, "humanprojectile")); 
+                    projectiles.add(new Throwable(humanXPosition+60, YPosition, gunshot, humanBar.getThrowStrength(), arrowHuman.getAngle(), "humanprojectile")); 
                     humanBar.reset();
                 } else {
                     robot.setThrowState();
-                    projectiles.add(new Throwable(robotXPosition, YPosition, energyorb, throwStrength, angle, "robotprojectile"));
+                    projectiles.add(new Throwable(robotXPosition-20, YPosition, energyorb, robotBar.getThrowStrength(), arrowRobot.getAngle(), "robotprojectile"));
                     robotBar.reset();
                 }
                 humanTurn = !humanTurn; // Switch turns
@@ -236,8 +297,6 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
             if (projectile.endTurn()) {
                 projectile.throwProjectile();
                 projectiles.clear();
-                human.setIdle();
-                robot.setIdle();
                 break;
             }
             projectile.throwProjectile();
@@ -246,268 +305,181 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         repaint();
     }
 
-    public void outsideBounds() {
-        for (int i = 0; i < projectiles.size(); i++) {
-            if ((projectiles.get(i).getX() + projectiles.get(i).getWidth() < 0) || (projectiles.get(i).getX()>1280)) {
-                projectiles.remove(i);
-            }
-        }
-    }
-
-    // network servers
-
-    public void connectToServer() {
-        try {
-            socket = new Socket("localhost", 45371);
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            playerID = in.readInt();
-            System.out.println("You are player #" + playerID);
-            
-            rra = new ReadRotateArrow(playerID, in);
-            rcp = new ReadChargePower(playerID, in);
-            rfp = new ReadFiringProjectile(playerID, in);
-            wrt = new WriteRotateArrow(playerID, out);
-            wcp = new WriteChargePower(playerID, out);
-            wfp = new WriteFiringProjectile(playerID, out);
-
-            Thread rraThread = new Thread(rra);
-            Thread rcpThread = new Thread(rcp);
-            Thread rfpThread = new Thread(rfp);
-            rraThread.start();
-            rcpThread.start();
-            rfpThread.start();
-            
-            Thread wrtThread = new Thread(wrt);
-            Thread wcpThread = new Thread(wcp);
-            Thread wfpThread = new Thread(wfp);
-            wrtThread.start();
-            wcpThread.start();
-            wfpThread.start();
-            System.out.println("Threads started");
-
-        } catch (IOException e) {
-            System.out.println("error from client cTS");
-        }
-    }
-
-    private class ReadRotateArrow implements Runnable {
-        private int playerID;
-        private ObjectInputStream objectIn;
-
-        private ReadRotateArrow(int id, ObjectInputStream in) {
-            playerID = id;
-            objectIn = in;
-            System.out.println("RRA Runnable created");
-        }
-
-        public void run() {
-            try {
-                while (true) {
-                    if (playerID == 1) {
-                        humanTurn = objectIn.readBoolean();
-                        human = (Player) objectIn.readObject();
-                    } else if (playerID == 2) {
-                        humanTurn = objectIn.readBoolean();
-                        robot = (Player) objectIn.readObject();
-                    }
-                    repaint();
-                }
-            } catch (IOException | ClassNotFoundException ex) {
-                System.out.println("error from client RRA");
-            }
-        }
-
-    }
-
-    private class ReadChargePower implements Runnable {
-        private int playerID;
-        private ObjectInputStream objectIn;
+    /**
+ * This method checks if any projectile has gone out of the game canvas bounds.
+ * If a projectile has gone beyond the left or right boundaries, it is removed from the projectiles list.
+ */
+public void outsideBounds() {
+    // Iterate over the projectiles list
+    for (int i = 0; i < projectiles.size(); i++) {
+        // Get the current projectile
+        Throwable projectile = projectiles.get(i);
         
-        private ReadChargePower(int id, ObjectInputStream in) {
-            playerID = id;
-            objectIn = in;
-            System.out.println("RCP Runnable created");
-        }
-        public void run() {
-            try {
-                while (true) {
-                    if (playerID == 1) {
-                        humanTurn = objectIn.readBoolean();
-                    } else if (playerID == 2) {
-                        humanTurn = objectIn.readBoolean();
-                    }
-                    repaint();
-                }
-            } catch (IOException ex) {
-                System.out.println("error from client RCP");
-            }
+        // Check if the projectile has gone beyond the left or right boundaries
+        if ((projectile.getX() + projectile.getWidth() < 0) || (projectile.getX() > 1280)) {
+            // Remove the projectile from the list
+            projectiles.remove(i);
         }
     }
+}
 
-    private class ReadFiringProjectile implements Runnable {
-        private int playerID;
-        private ObjectInputStream objectIn;
-
-        private ReadFiringProjectile(int id, ObjectInputStream in) {
-            playerID = id;
-            objectIn = in;
-            System.out.println("RFP Runnable created");
-        }
-
-        public void run() {
-            try {
-                while (true) {
-                    if (playerID == 1) {
-                        humanTurn = objectIn.readBoolean();
-                        humanXPosition = objectIn.readInt();
-                        YPosition = objectIn.readInt();
-                        gunshot = (ImageIcon) objectIn.readObject();
-                        throwStrength = (objectIn.readInt());
-                        angle = (objectIn.readDouble());
-                    } else if (playerID == 2) {
-                        humanTurn = objectIn.readBoolean();
-                        robotXPosition = objectIn.readInt();
-                        YPosition = objectIn.readInt();
-                        energyorb = (ImageIcon) objectIn.readObject();
-                        throwStrength = (objectIn.readInt());
-                        angle = (objectIn.readDouble());
-                    }
-                    repaint();
-                }
-            } catch (IOException | ClassNotFoundException ex) {
-                System.out.println("error from client RFP");
-            }
-        }
-
+    /**
+ * Plays a sound effect from a given file.
+ *
+ * @param file The path to the sound file.
+ * @throws Exception If an error occurs while playing the sound.
+ */
+public void PlayMusic(String file) {
+    try {
+        // Create a File object for the sound file
+        File musicPath = new File(file);
+        
+        // Get an AudioInputStream object for the sound file
+        AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicPath);
+        
+        // Get a Clip object for playing the sound
+        Clip clip = AudioSystem.getClip();
+        
+        // Open the sound file and start playing it
+        clip.open(audioInput);
+        clip.start();
+    } catch (Exception e) {
+        // Print any error messages to the console
+        System.out.println(e);
     }
+}
 
-
-    private class WriteRotateArrow implements Runnable {
-        private ObjectOutputStream objectOut;
-        private int playerID;
-
-        private WriteRotateArrow(int id, ObjectOutputStream out) {
-            playerID = id;
-            objectOut = out;
-            System.out.println("WRA Runnable created");
-        }
-
-        public void run() {
-            try {
-                if (playerID == 1) {
-                    objectOut.writeBoolean(humanTurn);
-                    objectOut.writeObject(human);
-                } else if (playerID == 2) {
-                    objectOut.writeBoolean(!humanTurn);
-                    objectOut.writeObject(robot);
-                }
-                objectOut.flush();
-                } catch (IOException ex) {
-                System.out.println("error from client RFS");
-            }
-        }
+    /**
+ * Plays a looping sound effect from a given file.
+ *
+ * @param file The path to the sound file.
+ * @throws Exception If an error occurs while playing the sound.
+ */
+public void PlayLoopMusic(String file) {
+    try {
+        // Create a File object for the sound file
+        File musicPath = new File(file);
+        
+        // Get an AudioInputStream object for the sound file
+        AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicPath);
+        
+        // Get a Clip object for playing the sound
+        Clip clip = AudioSystem.getClip();
+        
+        // Open the sound file and start playing it in a loop
+        clip.open(audioInput);
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
+        clip.start();
+    } catch (Exception e) {
+        // Print any error messages to the console
+        System.out.println(e);
     }
-
-    private class WriteChargePower implements Runnable {
-        private ObjectOutputStream objectOut;
-        private int playerID;
-
-        private WriteChargePower(int id, ObjectOutputStream out) {
-            playerID = id;
-            objectOut = out;
-            System.out.println("WCP Runnable created");
-        }
-
-        public void run() {
-            try {
-                if (playerID == 1) {
-                    objectOut.writeBoolean(humanTurn);
-                } else if (playerID == 2) {
-                    objectOut.writeBoolean(!humanTurn);
-                }
-                objectOut.flush();
-                } catch (IOException ex) {
-                System.out.println("error from client RFS");
-            }
-        }
-    }
-
-    private class WriteFiringProjectile implements Runnable {
-        private ObjectOutputStream objectOut;
-        private int playerID;
-
-        private WriteFiringProjectile(int id, ObjectOutputStream out) {
-            playerID = id;
-            objectOut = out;
-            System.out.println("WFP Runnable created");
-        }
-
-        public void run() {
-            try {
-                if (playerID == 1) {
-                    objectOut.writeBoolean(humanTurn);
-                    objectOut.writeInt(humanXPosition+60);
-                    objectOut.writeInt(YPosition);
-                    objectOut.writeObject(gunshot);
-                    objectOut.writeInt(humanBar.getThrowStrength());
-                    objectOut.writeDouble(arrowHuman.getAngle());
-                    objectOut.writeUTF("humanprojectile");
-
-                } else if (playerID == 2) {
-                    objectOut.writeBoolean(!humanTurn);
-                    objectOut.writeInt(robotXPosition-20);
-                    objectOut.writeInt(YPosition);
-                    objectOut.writeObject(energyorb);
-                    objectOut.writeInt(robotBar.getThrowStrength());
-                    objectOut.writeDouble(arrowRobot.getAngle());
-                    objectOut.writeUTF("robotprojectile");
-                }
-                objectOut.flush();
-                } catch (IOException ex) {
-                System.out.println("error from client RFS");
-            }
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 
     @Override
     public void mousePressed(MouseEvent e) {
-        throw new UnsupportedOperationException("Unimplemented method 'mousePressed'");
+        // TODO Auto-generated method stub
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        throw new UnsupportedOperationException("Unimplemented method 'mouseReleased'");
+        // TODO Auto-generated method stub
     }
 
     @Override
     public void mouseEntered(MouseEvent e) {
-        throw new UnsupportedOperationException("Unimplemented method 'mouseEntered'");
+        // TODO Auto-generated method stub
     }
 
     @Override
     public void mouseExited(MouseEvent e) {
-        throw new UnsupportedOperationException("Unimplemented method 'mouseExited'");
+        // TODO Auto-generated method stub
     }
 }
+
+
+/* public void connectToServer() {
+    try {
+        socket = new Socket("localhost", 12345);
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        playerID = in.readInt();
+        System.out.println("You are Player #" + playerID);
+        if (playerID == 1) {
+            System.out.println("Waiting for Player #2 to connect...");
+        }
+        rfsRunnable = new ReadFromServer(in);
+        wtsRunnable = new WriteToServer(out);
+    } catch (IOException ex) {
+        System.out.println("IOException from connectToServer");
+    }
+}
+
+private class ReadFromServer implements Runnable {
+    private DataInputStream dataIn;
+
+    public ReadFromServer(DataInputStream in) {
+        dataIn = in;
+        System.out.println("RFS Runnable Created");
+    }
+
+    public void run() {
+        try {
+            while (true) {
+                double enemyX = dataIn.readDouble();
+                double enemyY = dataIn.readDouble();
+                if (p2 != null) {
+                    if (enemyX != p2.getX()) {
+                        p2.setColor(Color.BLACK); 
+                    } else {
+                        if (playerID==1) {
+                            p2.setColor(Color.RED);
+                        } else {
+                            p2.setColor(Color.BLUE);
+                        }
+                    }
+                    p2.setX(enemyX);
+                    p2.setY(enemyY);
+                    dc.repaint();
+                }
+            }
+        } catch (IOException ex) {
+            System.out.println("IOException from RFS run()");
+        }
+    }
+}
+
+
+private class WriteToServer implements Runnable {
+    private DataOutputStream dataOut;
+
+    public WriteToServer(DataOutputStream out) {
+        dataOut = out;
+        System.out.println("WTS Runnable Created");
+    }
+
+    public void run() {
+        try {
+            while (true) {
+                if (p1 != null) {
+                    dataOut.writeDouble(p1.getX());
+                    dataOut.writeDouble(p1.getY());
+                    dataOut.flush();
+                }
+                
+                try {
+                    Thread.sleep(25); // Send updates every 25 ms
+                } catch (InterruptedException ex) {
+                    System.out.println("Interrupted Exception from WTS Run");
+                }
+            }
+        } catch (IOException ex) {
+            System.out.println("IOException from WTS Runnable");
+        }
+    }
+} */
+
 
 
 
