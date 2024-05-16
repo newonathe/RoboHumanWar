@@ -46,29 +46,15 @@ public class Player extends GameObject{
         super.y = y;
     }
 
-    public boolean turnTracker() {
-        return currentTurn;
-    }
-
-    public void setTurn(boolean currentTurn) {
-        this.currentTurn = currentTurn;
-    }
-
     public void setThrowingState(){
-        /* this.threw = false;
-        this.throwing = true; */
         super.image = throwingMotion;
     }
 
     public void setIdle() {
-        /* this.throwing = false;
-        this.threw = false; */
         super.image = idleMotion;
     }
 
     public void setThrowState(){
-        /* this.throwing = false;
-        this.threw = true; */
         super.image = threwMotion;
     }
     public boolean isDead(){

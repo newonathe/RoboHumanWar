@@ -3,8 +3,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.util.ArrayList;
+import java.io.*;
+import java.net.*;
 
-public class GameCanvas extends JComponent implements ActionListener, MouseListener {
+public class GameCanvas extends JComponent implements ActionListener, MouseListener {    
     ImageIcon bgImage, humanface, robotface, humanImage, 
     robotImage, humanFire, robotFire, humanThrew, robotThrew, 
     fenceImage, arrowImage, energyorb, gunshot, landImage;
@@ -14,7 +16,8 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
 
     Fence fence; // done
     Land ground;
-    Player human, robot; // done
+    Player robot; //PLAYER 1
+    Player human; //PLAYER 2
 
     ArrayList<Throwable> projectiles;
     
@@ -27,6 +30,17 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         IDLE, AWAITING_ARROW, ROTATING_ARROW, CHARGING_POWER, FIRING_PROJECTILE;
     }
     
+    // network field
+    private Socket socket;
+    private int playerID, throwStrength;
+    private double angle;
+    private ReadRotateArrow rra;
+    private ReadChargePower rcp;
+    private ReadFiringProjectile rfp;
+    private WriteRotateArrow wrt;
+    private WriteChargePower wcp;
+    private WriteFiringProjectile wfp;
+
     public GameCanvas() {
 
         bgImage = new ImageIcon("resources/bg.png");
@@ -48,34 +62,39 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
         robotXPosition = 1060;
         YPosition = 450;
 
-        human = new Player(humanXPosition, YPosition, humanImage, 100, "human");
-        human.idleMotion = humanImage;
-        human.throwingMotion = humanFire;
-        human.threwMotion = humanThrew;
-
-        robot = new Player(robotXPosition, YPosition, robotImage, 100, "robot");
-        robot.idleMotion = robotImage;
-        robot.throwingMotion = robotFire;
-        robot.threwMotion = robotThrew;
-
         fence = new Fence(590, 370, fenceImage, "fence"); 
         ground = new Land(0, 660, landImage, "ground");
 
-        arrowHuman = new AngleDirection(humanXPosition+120, YPosition-100, arrowImage, human, "arrowHuman");
-        arrowRobot = new AngleDirection(robotXPosition, YPosition-100, arrowImage, robot, "arrowRobot");
         humanBar = new PowerBar(humanXPosition+200, YPosition, arrowImage, "humanBar");
         robotBar = new PowerBar(robotXPosition+400, YPosition, arrowImage, "robotBar");
         projectiles = new ArrayList<Throwable>();
         currentState = TurnState.IDLE;
-        humanTurn = false;
-
-        arrowHuman.generateAngle(human);
-        arrowRobot.generateAngle(robot);
+        humanTurn = true;
 
         animationTimer = new Timer(5, this);
         animationTimer.start();
     }
-
+    
+    public void createP() {
+        if (playerID == 1) {
+            System.out.println("Waiting for Player #2 to connect...");
+            human = new Player(humanXPosition, YPosition, humanImage, 100, "human");
+            human.idleMotion = humanImage;
+            human.throwingMotion = humanFire;
+            human.threwMotion = humanThrew;
+            arrowHuman = new AngleDirection(humanXPosition+120, YPosition-100, arrowImage, human, "arrowHuman");
+            arrowHuman.generateAngle(human);
+        } else if (playerID == 2) {
+            System.out.println("Player #1 has connected!");
+            robot = new Player(robotXPosition, YPosition, robotImage, 100, "robot");
+            robot.idleMotion = robotImage;
+            robot.throwingMotion = robotFire;
+            robot.threwMotion = robotThrew;
+            arrowRobot = new AngleDirection(robotXPosition, YPosition-100, arrowImage, robot, "arrowRobot");
+            arrowRobot.generateAngle(robot);
+        }
+    }
+    
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
@@ -201,11 +220,11 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
             case FIRING_PROJECTILE:
                 if (humanTurn) {
                     human.setThrowState();
-                    projectiles.add(new Throwable(humanXPosition+60, YPosition, gunshot, humanBar.getThrowStrength(), arrowHuman.getAngle(), "humanprojectile")); 
+                    projectiles.add(new Throwable(humanXPosition, YPosition, gunshot, throwStrength, angle, "humanprojectile")); 
                     humanBar.reset();
                 } else {
                     robot.setThrowState();
-                    projectiles.add(new Throwable(robotXPosition-20, YPosition, energyorb, robotBar.getThrowStrength(), arrowRobot.getAngle(), "robotprojectile"));
+                    projectiles.add(new Throwable(robotXPosition, YPosition, energyorb, throwStrength, angle, "robotprojectile"));
                     robotBar.reset();
                 }
                 humanTurn = !humanTurn; // Switch turns
@@ -234,6 +253,240 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
             }
         }
     }
+
+    // network servers
+
+    public void connectToServer() {
+        try {
+            socket = new Socket("localhost", 45371);
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            playerID = in.readInt();
+            System.out.println("You are player #" + playerID);
+            
+            rra = new ReadRotateArrow(playerID, in);
+            rcp = new ReadChargePower(playerID, in);
+            rfp = new ReadFiringProjectile(playerID, in);
+            wrt = new WriteRotateArrow(playerID, out);
+            wcp = new WriteChargePower(playerID, out);
+            wfp = new WriteFiringProjectile(playerID, out);
+
+            Thread rraThread = new Thread(rra);
+            Thread rcpThread = new Thread(rcp);
+            Thread rfpThread = new Thread(rfp);
+            rraThread.start();
+            rcpThread.start();
+            rfpThread.start();
+            
+            Thread wrtThread = new Thread(wrt);
+            Thread wcpThread = new Thread(wcp);
+            Thread wfpThread = new Thread(wfp);
+            wrtThread.start();
+            wcpThread.start();
+            wfpThread.start();
+            System.out.println("Threads started");
+
+        } catch (IOException e) {
+            System.out.println("error from client cTS");
+        }
+    }
+
+    private class ReadRotateArrow implements Runnable {
+        private int playerID;
+        private ObjectInputStream objectIn;
+
+        private ReadRotateArrow(int id, ObjectInputStream in) {
+            playerID = id;
+            objectIn = in;
+            System.out.println("RRA Runnable created");
+        }
+
+        public void run() {
+            try {
+                while (true) {
+                    if (playerID == 1) {
+                        humanTurn = objectIn.readBoolean();
+                        human = (Player) objectIn.readObject();
+                    } else if (playerID == 2) {
+                        humanTurn = objectIn.readBoolean();
+                        robot = (Player) objectIn.readObject();
+                    }
+                    repaint();
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                System.out.println("error from client RRA");
+            }
+        }
+
+    }
+
+    private class ReadChargePower implements Runnable {
+        private int playerID;
+        private ObjectInputStream objectIn;
+        
+        private ReadChargePower(int id, ObjectInputStream in) {
+            playerID = id;
+            objectIn = in;
+            System.out.println("RCP Runnable created");
+        }
+        public void run() {
+            try {
+                while (true) {
+                    if (playerID == 1) {
+                        humanTurn = objectIn.readBoolean();
+                    } else if (playerID == 2) {
+                        humanTurn = objectIn.readBoolean();
+                    }
+                    repaint();
+                }
+            } catch (IOException ex) {
+                System.out.println("error from client RCP");
+            }
+        }
+    }
+
+    private class ReadFiringProjectile implements Runnable {
+        private int playerID;
+        private ObjectInputStream objectIn;
+
+        private ReadFiringProjectile(int id, ObjectInputStream in) {
+            playerID = id;
+            objectIn = in;
+            System.out.println("RFP Runnable created");
+        }
+
+        public void run() {
+            try {
+                while (true) {
+                    if (playerID == 1) {
+                        humanTurn = objectIn.readBoolean();
+                        humanXPosition = objectIn.readInt();
+                        YPosition = objectIn.readInt();
+                        gunshot = (ImageIcon) objectIn.readObject();
+                        throwStrength = (objectIn.readInt());
+                        angle = (objectIn.readDouble());
+                    } else if (playerID == 2) {
+                        humanTurn = objectIn.readBoolean();
+                        robotXPosition = objectIn.readInt();
+                        YPosition = objectIn.readInt();
+                        energyorb = (ImageIcon) objectIn.readObject();
+                        throwStrength = (objectIn.readInt());
+                        angle = (objectIn.readDouble());
+                    }
+                    repaint();
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                System.out.println("error from client RFP");
+            }
+        }
+
+    }
+
+
+    private class WriteRotateArrow implements Runnable {
+        private ObjectOutputStream objectOut;
+        private int playerID;
+
+        private WriteRotateArrow(int id, ObjectOutputStream out) {
+            playerID = id;
+            objectOut = out;
+            System.out.println("WRA Runnable created");
+        }
+
+        public void run() {
+            try {
+                if (playerID == 1) {
+                    objectOut.writeBoolean(humanTurn);
+                    objectOut.writeObject(human);
+                } else if (playerID == 2) {
+                    objectOut.writeBoolean(!humanTurn);
+                    objectOut.writeObject(robot);
+                }
+                objectOut.flush();
+                } catch (IOException ex) {
+                System.out.println("error from client RFS");
+            }
+        }
+    }
+
+    private class WriteChargePower implements Runnable {
+        private ObjectOutputStream objectOut;
+        private int playerID;
+
+        private WriteChargePower(int id, ObjectOutputStream out) {
+            playerID = id;
+            objectOut = out;
+            System.out.println("WCP Runnable created");
+        }
+
+        public void run() {
+            try {
+                if (playerID == 1) {
+                    objectOut.writeBoolean(humanTurn);
+                } else if (playerID == 2) {
+                    objectOut.writeBoolean(!humanTurn);
+                }
+                objectOut.flush();
+                } catch (IOException ex) {
+                System.out.println("error from client RFS");
+            }
+        }
+    }
+
+    private class WriteFiringProjectile implements Runnable {
+        private ObjectOutputStream objectOut;
+        private int playerID;
+
+        private WriteFiringProjectile(int id, ObjectOutputStream out) {
+            playerID = id;
+            objectOut = out;
+            System.out.println("WFP Runnable created");
+        }
+
+        public void run() {
+            try {
+                if (playerID == 1) {
+                    objectOut.writeBoolean(humanTurn);
+                    objectOut.writeInt(humanXPosition+60);
+                    objectOut.writeInt(YPosition);
+                    objectOut.writeObject(gunshot);
+                    objectOut.writeInt(humanBar.getThrowStrength());
+                    objectOut.writeDouble(arrowHuman.getAngle());
+                    objectOut.writeUTF("humanprojectile");
+
+                } else if (playerID == 2) {
+                    objectOut.writeBoolean(!humanTurn);
+                    objectOut.writeInt(robotXPosition-20);
+                    objectOut.writeInt(YPosition);
+                    objectOut.writeObject(energyorb);
+                    objectOut.writeInt(robotBar.getThrowStrength());
+                    objectOut.writeDouble(arrowRobot.getAngle());
+                    objectOut.writeUTF("robotprojectile");
+                }
+                objectOut.flush();
+                } catch (IOException ex) {
+                System.out.println("error from client RFS");
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void mousePressed(MouseEvent e) {

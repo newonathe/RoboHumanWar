@@ -31,6 +31,8 @@ public class MenuGui extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == play) {
+            GameCanvas gameCanvas = new GameCanvas();
+            gameCanvas.connectToServer();
             GameFrame frame = new GameFrame();
             frame.setUpGui();
         } else if (e.getSource() == exit) {

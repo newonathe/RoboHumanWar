@@ -10,6 +10,7 @@ public class GameFrame {
     public GameFrame() {
         frame = new JFrame("Cats vs Dogs");
         canvas = new GameCanvas();
+        canvas.connectToServer();
         canvas.setPreferredSize(new Dimension(w,h));
     }
 
@@ -18,6 +19,7 @@ public class GameFrame {
         contentPane.add(canvas);
         frame.pack();
         frame.addMouseListener(canvas);
+        canvas.createP();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
