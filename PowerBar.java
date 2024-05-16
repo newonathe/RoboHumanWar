@@ -10,8 +10,8 @@ public class PowerBar extends GameObject{
     boolean willGoUp;
     int bounceSpeed = 1;
 
-    public PowerBar(int x, int y, ImageIcon image) {
-        super(x, y, image);
+    public PowerBar(int x, int y, ImageIcon image, String id) {
+        super(x, y, image, id);
         this.x = x-250; //+ width of image
         this.y = y+100; // + height of image
         reset();

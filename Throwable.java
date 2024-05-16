@@ -1,6 +1,6 @@
 import javax.swing.*;
 
-public abstract class Throwable extends GameObject {
+public class Throwable extends GameObject {
     protected double velocityX, velocityY;  
     protected int damage;  
     protected boolean isSliding; 
@@ -10,16 +10,20 @@ public abstract class Throwable extends GameObject {
     private static final double SLIDE_FRICTION = 0.1; 
     private static final double VELOCITY_THRESHOLD = 0.1; // For stopping the slide
 
-    public Throwable(int x, int y, ImageIcon image, double initialVelocity, double angle, int damage) {
-        super(x, y, image); 
-        this.damage = damage;
+    public Throwable(int x, int y, ImageIcon image, double initialVelocity, double angle, String id) {
+        super(x, y, image, id); 
+        this.damage = 10; 
 
         // Calculate initial velocities based on throw angle
         this.velocityX = initialVelocity/5 * Math.cos(Math.toRadians(angle));
         this.velocityY = initialVelocity/5 * Math.sin(Math.toRadians(angle));
     }
 
-    public void update() {
+    public void handlePlayerCollision(Player player) {
+        player.takeDamage(damage); 
+    } 
+
+    public void throwProjectile() {
         if (!isSliding) { 
             // If in the air, apply gravity and update position
             x += velocityX;
@@ -52,8 +56,6 @@ public abstract class Throwable extends GameObject {
         velocityX *= -BOUNCE_REDUCTION; // Reverse direction, lose some velocity
     } 
 
-    protected abstract void handlePlayerCollision(Player player); // take damage and special effects for powerupsw
-
     private void handleGroundCollision() {
         isSliding = true; 
     }
@@ -67,5 +69,9 @@ public abstract class Throwable extends GameObject {
             velocityX = 0; // Stop completely
             isSliding = false; // No longer sliding
         }
+    }
+
+    public boolean endTurn() {
+        return velocityX == 0;
     }
 }

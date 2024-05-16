@@ -1,19 +1,17 @@
-    import java.awt.*;
-// import java.awt.event.*;
+import java.awt.*;
 import javax.swing.*;
 
 public class AngleDirection extends GameObject {
     int pivot1, pivot2;
     double angle;
     boolean goUp;
-    Timer timer;
     double rSpeed = 0.6;
     boolean rotating = true;
 
-    public AngleDirection(int x, int y, ImageIcon image, Player player) {
-        super(x, y, image);
+    public AngleDirection(int x, int y, ImageIcon image, Player player, String id) {
+        super(x, y, image, id);
         pivot1 = x;
-        pivot2 = y+80;
+        pivot2 = y+120;
         generateAngle(player);
     }
 
