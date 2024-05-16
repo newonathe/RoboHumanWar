@@ -1,3 +1,21 @@
+/**
+	@author Ethan Owen Taruc (236196)
+    @author Keith Ayeras (230564)
+	@version 17 May 2024
+	
+	I have not discussed the Java language code in my program 
+	with anyone other than my instructor or the teaching assistants 
+	assigned to this course.
+
+	I have not used Java language code obtained from another student, 
+	or any other unauthorized source, either modified or unmodified.
+
+	If any Java language code or documentation used in my program 
+	was obtained from another source, such as a textbook or website, 
+	that has been clearly noted with a proper citation in the comments 
+	of my program.
+**/
+
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
@@ -43,35 +61,35 @@ public class GameCanvas extends JComponent implements ActionListener, MouseListe
      */
     public GameCanvas() {
 
-        bgImage = new ImageIcon("resources/bg.png");
-        humanface = new ImageIcon("resources/humanface.png");
-        humanfacewin = new ImageIcon("resources/humanfacewin.png");
-        robotface = new ImageIcon("resources/robotface.png");
-        robotfacewin = new ImageIcon("resources/robotfacewin.png");
-        humanImage = new ImageIcon("resources/human.gif");
-        robotImage = new ImageIcon("resources/robot.gif");
-        humanFire = new ImageIcon("resources/humanturn.gif");
-        robotFire = new ImageIcon("resources/robotturn.gif");
-        humanThrew = new ImageIcon("resources/humanthrew.gif");
-        robotThrew = new ImageIcon("resources/robotthrew.gif");
-        fenceImage = new ImageIcon("resources/fence.gif");
-        arrowImage = new ImageIcon("resources/arrow.png");
-        energyorb = new ImageIcon("resources/energyorb.gif");
-        gunshot = new ImageIcon("resources/gunshot.gif");
-        landImage = new ImageIcon("resources/land.png");
-        humanWin = new ImageIcon("resources/humanWin.png");
-        robotWin = new ImageIcon("resources/robotWin.png");
-        music = "resources/music.wav";
-        robotdmg = "resources/robotdmg.wav";
-        humandmg = "resources/humandmg.wav";
-        gunshot1 = "resources/gunshot1.wav";
-        gunshot2 = "resources/gunshot2.wav";
-        laser1 = "resources/laser1.wav";
-        laser2 = "resources/laser2.wav";
-        collision = "resources/collision.wav";
-        gameover = "resources/gameover.wav";
-        gameover2 = "resources/gameover2.wav";
-        lock = "resources/lock.wav";
+        bgImage = new ImageIcon("media resources/bg.png");
+        humanface = new ImageIcon("media resources/humanface.png");
+        humanfacewin = new ImageIcon("media resources/humanfacewin.png");
+        robotface = new ImageIcon("media resources/robotface.png");
+        robotfacewin = new ImageIcon("media resources/robotfacewin.png");
+        humanImage = new ImageIcon("media resources/human.gif");
+        robotImage = new ImageIcon("media resources/robot.gif");
+        humanFire = new ImageIcon("media resources/humanturn.gif");
+        robotFire = new ImageIcon("media resources/robotturn.gif");
+        humanThrew = new ImageIcon("media resources/humanthrew.gif");
+        robotThrew = new ImageIcon("media resources/robotthrew.gif");
+        fenceImage = new ImageIcon("media resources/fence.gif");
+        arrowImage = new ImageIcon("media resources/arrow.png");
+        energyorb = new ImageIcon("media resources/energyorb.gif");
+        gunshot = new ImageIcon("media resources/gunshot.gif");
+        landImage = new ImageIcon("media resources/land.png");
+        humanWin = new ImageIcon("media resources/humanWin.png");
+        robotWin = new ImageIcon("media resources/robotWin.png");
+        music = "media resources/music.wav";
+        robotdmg = "media resources/robotdmg.wav";
+        humandmg = "media resources/humandmg.wav";
+        gunshot1 = "media resources/gunshot1.wav";
+        gunshot2 = "media resources/gunshot2.wav";
+        laser1 = "media resources/laser1.wav";
+        laser2 = "media resources/laser2.wav";
+        collision = "media resources/collision.wav";
+        gameover = "media resources/gameover.wav";
+        gameover2 = "media resources/gameover2.wav";
+        lock = "media resources/lock.wav";
 
         humanXPosition = 100;
         robotXPosition = 1060;
@@ -397,7 +415,6 @@ public void PlayLoopMusic(String file) {
         // TODO Auto-generated method stub
     }
 }
-
 
 /* public void connectToServer() {
     try {
